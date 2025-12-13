@@ -58,42 +58,48 @@ ansi = module_registry['ansi']
 kernel_version = "Beta 0.0.1"
 
 print(f"Kernel loaded! Version: {kernel_version}")
-print("Detecting Environment...")
-
-try:
-    import sys
-    global environment
-    environment = sys.implementation.name
-    print(f"...{environment}")
-except:
-    print(f"{ansi.ansi['red']}KERNEL PANIC: Failed to retrieve environment library{ansi.ansi['reset']}")
-    quit()
 
 import builtins
 builtins.__elaptic_registry__ = module_registry
 
 # 2. Load other modules
-load_module_to_registry("kernel.modules.pixel", True)
+load_module_to_registry("sys", True)
+load_module_to_registry("os", False)
+load_module_to_registry("builtins", True)
 load_module_to_registry("asyncio", True)  # asyncio is a standard library
 load_module_to_registry("time", True)
-load_module_to_registry("kernel.ede", True)
+load_module_to_registry("kernel.modules.api", True)
+load_module_to_registry("kernel.modules.shellbackend", True)
+load_module_to_registry("kernel.modules.shellwrapper", True)
+load_module_to_registry("kernel.modules.pixel", False)
+load_module_to_registry("kernel.ede", False)
 
 # Set variable names to module
 asyncio = module_registry['asyncio']
 ede = module_registry['ede']
 time = module_registry['time']
+sys = module_registry['sys']
+shellbackend = module_registry['shellbackend']
+shellwrapper = module_registry['shellwrapper']
 
+environment = sys.implementation.name
 
 # --------MAIN KERNEL LOOP--------
 async def mainloop():
     while True:
-        await asyncio.sleep(-1) # The rest of the kernel is unimplimented right now
+        await asyncio.sleep(1) # The rest of the kernel is unimplimented right now
+
+async def shell_interface():
+    print(f"--------ElapticOS Version {kernel_version} running under '{environment}'--------")
+    while True:
+        command = await asyncio.to_thread(input, "$> ")
+        print(shellwrapper.run_shell_command(command))
 
 
 # Start the kernel :D
 async def runkernel():
     await asyncio.gather(
         mainloop(),
-        ede.desktop_main()
+        shell_interface()
     )
 asyncio.run(runkernel())
