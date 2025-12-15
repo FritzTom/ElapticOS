@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>32x32 Sprite Editor</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        #app-container {
+            display: flex;
+            gap: 20px;
+        }
+        #editor-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        #controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        #canvas {
+            border: 2px solid #333;
+            background-color: #fff; /* White background to see transparent pixels */
+            cursor: crosshair;
+        }
+        #output-container {
+            margin-top: 20px;
+            width: 100%;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            font-family: monospace;
+            resize: none;
+        }
+        button {
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Sprite Editor (Max 32x32)</h1>
+
+    <div id="app-container">
+        <div id="editor-container">
+            <div id="controls">
+                <label for="size">Grid Size (1-32):</label>
+                <input type="number" id="size" value="32" min="1" max="32">
+                <button onclick="createGrid()">Update Size</button>
+                <label for="colorPicker">Color:</label>
+                <input type="color" id="colorPicker" value="#00ff00">
+                <button onclick="setTool('pen')">Pen</button>
+                <button onclick="setTool('eraser')">Eraser (0x000000)</button>
+                <button onclick="fillGrid()">Fill</button>
+            </div>
+            <canvas id="canvas" width="512" height="512"></canvas>
+        </div>
+        <div id="output-container">
+            <h3>Pixel Data Output</h3>
+            <textarea id="output"></textarea>
+            <button onclick="generateOutput()">Generate Code</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const sizeInput = document.getElementById('size');
+        const colorPicker = document.getElementById('colorPicker');
+        const outputArea = document.getElementById('output');
+        const MAX_CANVAS_SIZE = 512;
+
+        let gridSize = 32;
+        let pixelSize = MAX_CANVAS_SIZE / gridSize;
+        let selectedColor = '#00ff00';
+        let currentTool = 'pen'; // 'pen' or 'eraser'
+        let isDrawing = false;
+
+        // Internal pixel data storage (matches the 0xRRGGBB format)
+        let pixelData = [];
+
+        canvas.addEventListener('mousedown', (e) => {
+            isDrawing = true;
+            drawPixel(e);
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (isDrawing) {
+                drawPixel(e);
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isDrawing = false;
+            generateOutput();
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            isDrawing = false;
+        });
+
+        colorPicker.addEventListener('change', (e) => {
+            selectedColor = e.target.value;
+            setTool('pen');
+        });
+
+        function setTool(tool) {
+            currentTool = tool;
+        }
+
+        function createGrid() {
+            gridSize = parseInt(sizeInput.value);
+            if (isNaN(gridSize) || gridSize < 1 || gridSize > 32) {
+                alert("Please enter a valid size between 1 and 32.");
+                gridSize = 32;
+                sizeInput.value = 32;
+            }
+            pixelSize = MAX_CANVAS_SIZE / gridSize;
+            pixelData = new Array(gridSize * gridSize).fill(0x000000); // Initialize with transparency
+            drawCanvas();
+            generateOutput();
+        }
+
+        function drawCanvas() {
+            ctx.clearRect(0, 0, MAX_CANVAS_SIZE, MAX_CANVAS_SIZE);
+            for (let i = 0; i < pixelData.length; i++) {
+                const color = pixelData[i];
+                if (color !== 0x000000) {
+                    const hexColor = '#' + color.toString(16).padStart(6, '0');
+                    const x = (i % gridSize) * pixelSize;
+                    const y = Math.floor(i / gridSize) * pixelSize;
+                    ctx.fillStyle = hexColor;
+                    ctx.fillRect(x, y, pixelSize, pixelSize);
+                }
+            }
+            // Draw grid lines
+            ctx.strokeStyle = '#eee';
+            for (let i = 0; i <= gridSize; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * pixelSize, 0);
+                ctx.lineTo(i * pixelSize, MAX_CANVAS_SIZE);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(0, i * pixelSize);
+                ctx.lineTo(MAX_CANVAS_SIZE, i * pixelSize);
+                ctx.lineTo(MAX_CANVAS_SIZE, i * pixelSize);
+                ctx.stroke();
+            }
+        }
+
+        function drawPixel(event) {
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            const col = Math.floor(x / pixelSize);
+            const row = Math.floor(y / pixelSize);
+
+            if (col >= 0 && col < gridSize && row >= 0 && row < gridSize) {
+                const index = row * gridSize + col;
+                if (currentTool === 'pen') {
+                    // Convert hex string from color picker to 0xRRGGBB integer
+                    const colorInt = parseInt(selectedColor.substring(1), 16);
+                    pixelData[index] = colorInt;
+                } else if (currentTool === 'eraser') {
+                    pixelData[index] = 0x000000; // Transparency
+                }
+                drawCanvas();
+            }
+        }
+
+        function fillGrid() {
+            const colorInt = currentTool === 'pen'
+                ? parseInt(selectedColor.substring(1), 16)
+                : 0x000000;
+            pixelData.fill(colorInt);
+            drawCanvas();
+            generateOutput();
+        }
+
+        function generateOutput() {
+            const hexArray = pixelData.map(color => `0x${color.toString(16).padStart(6, '0')}`);
+            outputArea.value = `[\n    ${hexArray.join(', ')}\n]`;
+        }
+
+        // Initialize on load
+        createGrid();
+    </script>
+</body>
+</html>
