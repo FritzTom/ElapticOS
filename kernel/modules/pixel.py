@@ -1,3 +1,5 @@
+# clever ahh text-based graphics
+
 class Bitmap:
     def __init__(self, width, height, pixels):
         self.width = width

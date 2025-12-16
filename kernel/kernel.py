@@ -73,8 +73,8 @@ load_module_to_registry("time", True)
 load_module_to_registry("kernel.modules.keyboard", True)
 load_module_to_registry("kernel.modules.api", True)
 load_module_to_registry("kernel.modules.pixel", False)
-load_module_to_registry("kernel.ede", False)
 load_module_to_registry("kernel.modules.interpreter", True)
+load_module_to_registry("kernel.ede", False)
 load_module_to_registry("kernel.modules.shellwrapper", True)
 
 # Set variable names to module
