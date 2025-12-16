@@ -1,5 +1,5 @@
 # -------- ELAPTIC OS KERNEL (Universal Compatibility) --------
-
+import _thread
 # We need the 'sys' library to manually manage imports within the module registry
 # I just like having high level access to imports in the environment of an operating system :p
 import sys
@@ -47,7 +47,6 @@ def load_module_to_registry(module_path: str, important: bool):
         else:
             print(f"{module_registry['ansi'].ansi['yellow']}Module '{module_path}' failed to load, but is not required. This may cause issues later. ({e}) {module_registry['ansi'].ansi['reset']}")
 
-
 # --- OS Startup Logic ---
 
 # 1. Load ANSI first (the first required module)
@@ -55,7 +54,7 @@ load_module_to_registry("kernel.modules.ansi", True)
 ansi = module_registry['ansi']
 
 # Literals:
-kernel_version = "Beta 0.0.1"
+kernel_version = "Beta 0.0.3"
 
 print(f"Kernel loaded! Version: {kernel_version}")
 
@@ -65,42 +64,45 @@ builtins.__elaptic_registry__ = module_registry
 # 2. Load other modules
 load_module_to_registry("sys", True)
 load_module_to_registry("os", False)
+load_module_to_registry("re", True)
+load_module_to_registry("select", False)
 load_module_to_registry("builtins", True)
+load_module_to_registry("_thread", False)
 load_module_to_registry("asyncio", True)  # asyncio is a standard library
 load_module_to_registry("time", True)
+load_module_to_registry("kernel.modules.keyboard", True)
 load_module_to_registry("kernel.modules.api", True)
-load_module_to_registry("kernel.modules.shellbackend", True)
-load_module_to_registry("kernel.modules.shellwrapper", True)
 load_module_to_registry("kernel.modules.pixel", False)
 load_module_to_registry("kernel.ede", False)
+load_module_to_registry("kernel.modules.interpreter", True)
+load_module_to_registry("kernel.modules.shellwrapper", True)
 
 # Set variable names to module
 asyncio = module_registry['asyncio']
 ede = module_registry['ede']
 time = module_registry['time']
 sys = module_registry['sys']
-shellbackend = module_registry['shellbackend']
+interpreter = module_registry['interpreter']
 shellwrapper = module_registry['shellwrapper']
-
+keyboard = module_registry['keyboard']
 environment = sys.implementation.name
 
-# --------MAIN KERNEL LOOP--------
-async def mainloop():
-    while True:
-        await asyncio.sleep(1) # The rest of the kernel is unimplimented right now
+print("\n\n\n")
 
-async def shell_interface():
+# --------KERNEL SYSTEM--------
+def mainloop():
+    while True:
+        time.sleep(3)
+
+def shell_interface():
     print(f"--------ElapticOS Version {kernel_version} running under '{environment}'--------")
     while True:
-        command = await asyncio.to_thread(input, "$> ")
+        command = input("$> ")
         shellwrapper.run_shell_command(command)
+        time.sleep(1)
 
 
 # Start the kernel :D
-async def runkernel():
-    await asyncio.gather(
-        mainloop(),
-        shell_interface()
-    )
-
-asyncio.run(runkernel())
+keyboard.start_keyboard_monitoring()
+_thread.start_new_thread(mainloop, ())
+shell_interface()

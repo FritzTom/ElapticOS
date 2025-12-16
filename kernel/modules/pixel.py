@@ -4,6 +4,7 @@ class Bitmap:
         self.height = height
         self.pixels = pixels[:]  # copy list
         # Fill with transparent pixels if not enough pixels provided
+        # 0x000000 is now treated as the transparency key.
         missing = width * height - len(self.pixels)
         if missing > 0:
             self.pixels.extend([0x000000] * missing)
@@ -38,7 +39,7 @@ class Screen:
         self.height_chars = height_chars
         self.width_pixels = width_chars
         self.height_pixels = height_chars * 2
-        self.clear_color = 0x000000
+        self.clear_color = 0x000000  # Clear color is transparent black
         self.sprites = []
 
     def add_sprite(self, sprite):
@@ -71,7 +72,8 @@ class Screen:
                         screen_x = sprite.x + px
                         if 0 <= screen_x < self.width_pixels:
                             pixel_color = sprite.pixels[py * sprite.width + px]
-                            # For now ignore transparency (0x000000 treated as black)
+
+                            # If the pixel is not the transparency key (0x000000), draw it.
                             if pixel_color != 0x000000:
                                 self.pixel_buffer[screen_y][screen_x] = pixel_color
 
@@ -108,4 +110,3 @@ class Screen:
             if background
             else f"\033[38;2;{r};{g};{b}m"
         )
-
