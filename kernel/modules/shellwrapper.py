@@ -21,11 +21,7 @@ def run_shell_command(command: str, directory =  "/"):
 
                 script_content = f.read()
 
-                def script_wrapper():
-                    # The interpreter.run_script function likely needs the content as an argument
-                    interpreter.run_script(script_content)
-
-                return _thread.start_new_thread(script_wrapper())
+                interpreter.run_script(script_content)
 
         elif tokenized_command[0] == "touch": # Create empty file
             api.touch(tokenized_command[1])
