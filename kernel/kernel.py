@@ -99,12 +99,12 @@ def shell_interface(start_command = ""):
         shellwrapper.run_shell_command(start_command)
     print(f"--------ElapticOS Version {kernel_version} running under '{environment}'--------")
     while True:
+        keyboard.stop_keyboard_monitoring() #make sure keyboard monitoring doesn't interact with inputs
         command = input("$> ")
         shellwrapper.run_shell_command(command)
         time.sleep(1)
 
 
 # Start the kernel :D
-keyboard.start_keyboard_monitoring()
 _thread.start_new_thread(mainloop, ())
-shell_interface("ede") #start with ede
+shell_interface() #start with ede
