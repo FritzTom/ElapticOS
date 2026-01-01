@@ -55,10 +55,6 @@ def load_module_to_registry(module_path: str, important: bool):
 
 # --- OS Startup Logic ---
 
-# 1. Load ANSI first (the first required module)
-load_module_to_registry("kernel.modules.ansi", True)
-ansi = module_registry['ansi']
-
 # Literals:
 kernel_version = "Beta 0.0.3"
 
@@ -67,14 +63,15 @@ print(f"Kernel loaded! Version: {kernel_version}")
 import builtins
 builtins.__elaptic_registry__ = module_registry
 
-# 2. Load other modules
+# Load modules
+load_module_to_registry("kernel.modules.ansi", True)
 load_module_to_registry("sys", True)
 load_module_to_registry("os", False)
 load_module_to_registry("re", True)
 load_module_to_registry("select", False)
 load_module_to_registry("builtins", True)
 load_module_to_registry("_thread", False)
-load_module_to_registry("asyncio", True)  # asyncio is a standard library
+load_module_to_registry("asyncio", True)
 load_module_to_registry("time", True)
 load_module_to_registry("kernel.modules.keyboard", True)
 load_module_to_registry("kernel.modules.api", True)
@@ -84,6 +81,7 @@ load_module_to_registry("kernel.ede", False)
 load_module_to_registry("kernel.modules.shellwrapper", True)
 
 # Set variable names to module
+ansi = module_registry['ansi']
 asyncio = module_registry['asyncio']
 ede = module_registry['ede']
 time = module_registry['time']
@@ -108,7 +106,6 @@ def shell_interface(start_command = ""):
         keyboard.stop_keyboard_monitoring() #make sure keyboard monitoring doesn't interact with inputs
         command = input("$> ")
         shellwrapper.run_shell_command(command)
-        time.sleep(1)
 
 
 # Start the kernel :D

@@ -7,13 +7,17 @@ ede = __elaptic_registry__['ede']
 
 def run_shell_command(command: str, directory =  "/"):
     tokenized_command = command.split()
+    if len(tokenized_command) < 1: return
     try:
         if tokenized_command[0] == "help":
             print("""
             ElapticOS Guide:
                 help                        | Displays the help menu.
                 run <directory to .py file> | Runs a python program.
-                rm  <file>                  | Deletes a file
+                touch                       | Creates a empty file.
+                rm  <file>                  | Deletes a file.
+                ede                         | Runs the de.
+                exit                        | Stops the kernel.
             """)
 
         elif tokenized_command[0] == "run": # Run python program
@@ -21,12 +25,15 @@ def run_shell_command(command: str, directory =  "/"):
 
                 script_content = f.read()
 
-                interpreter.run_script(script_content)
+                print(interpreter.run_script(script_content))
 
         elif tokenized_command[0] == "touch": # Create empty file
             api.touch(tokenized_command[1])
 
         elif tokenized_command[0] == "rm": # Remove file
+            if len(tokenized_command) < 2:
+                print("rm requires two arguments!")
+                return
             if api.rm(tokenized_command[1]):
                 print(f"Removed file '{tokenized_command[1]}'")
             else:
@@ -41,5 +48,5 @@ def run_shell_command(command: str, directory =  "/"):
 
         else:
             print(f"Invalid command: {command}")
-    except:
-        pass
+    except Exception as err:
+        print(f"Exception: {repr(err)}")
