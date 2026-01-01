@@ -35,6 +35,9 @@ def load_module_to_registry(module_path: str, important: bool):
         if 'ansi' in module_registry:
             print(
                 f"{module_registry['ansi'].ansi['green']}--Successfully registered {module_short_name}{module_registry['ansi'].ansi['reset']}")
+        else:
+            print(
+                f"--Successfully registered {module_short_name}")
 
     except ImportError as e:
         if important:
@@ -45,7 +48,10 @@ def load_module_to_registry(module_path: str, important: bool):
                 print(f"KERNEL PANIC: Module '{module_path}' failed to load. Halting. ({e})")
             quit()
         else:
-            print(f"{module_registry['ansi'].ansi['yellow']}Module '{module_path}' failed to load, but is not required. This may cause issues later. ({e}) {module_registry['ansi'].ansi['reset']}")
+            if 'ansi' in module_registry:
+                print(f"{module_registry['ansi'].ansi['yellow']}Module '{module_path}' failed to load, but is not required. This may cause issues later. ({e}){module_registry['ansi'].ansi['reset']}")
+            else:
+                print(f"Module '{module_path}' failed to load, but is not required. This may cause issues later. ({e})")
 
 # --- OS Startup Logic ---
 
